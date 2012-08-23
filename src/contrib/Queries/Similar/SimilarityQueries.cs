@@ -17,18 +17,11 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Search;
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Term = Lucene.Net.Index.Term;
-using BooleanQuery = Lucene.Net.Search.BooleanQuery;
-using IndexSearcher = Lucene.Net.Search.IndexSearcher;
-using Query = Lucene.Net.Search.Query;
-using TermQuery = Lucene.Net.Search.TermQuery;
-using BooleanClause = Lucene.Net.Search.BooleanClause;
+using Lucene.Net.Analysis;
+using Lucene.Net.Index;
 using Lucene.Net.Analysis.Tokenattributes;
 
-namespace Similarity.Net
+namespace Lucene.Net.Search.Similar
 {
 
     /// <summary> Simple similarity measures.
