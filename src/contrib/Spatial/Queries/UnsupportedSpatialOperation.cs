@@ -15,12 +15,15 @@
  * limitations under the License.
  */
 
-namespace Lucene.Net.Spatial
+using System;
+
+namespace Lucene.Net.Spatial.Queries
 {
-	/// <summary>
-	/// Information the strategy needs for the lucene fields
-	/// </summary>
-	public interface SpatialFieldInfo
+	[Serializable]
+	public class UnsupportedSpatialOperation : InvalidOperationException
 	{
+		public UnsupportedSpatialOperation(SpatialOperation op) : base(op.GetName())
+		{
+		}
 	}
 }

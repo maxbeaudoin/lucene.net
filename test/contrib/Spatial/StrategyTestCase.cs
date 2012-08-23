@@ -20,17 +20,18 @@ using System.Collections.Generic;
 using System.IO;
 using Lucene.Net.Documents;
 using Lucene.Net.Spatial;
+using Lucene.Net.Spatial.Queries;
 using Lucene.Net.Util;
 using NUnit.Framework;
 using Spatial4n.Core.Context;
 using Spatial4n.Core.Io.Samples;
-using Spatial4n.Core.Query;
 using Spatial4n.Core.Shapes;
 
 namespace Lucene.Net.Contrib.Spatial.Test
 {
-	public abstract class StrategyTestCase<T> : SpatialTestCase where T : SpatialFieldInfo
+	public abstract class StrategyTestCase : SpatialTestCase
 	{
+		public static readonly String DATA_SIMPLE_BBOX = "simple-bbox.txt";
 		public static readonly String DATA_STATES_POLY = "states-poly.txt";
 		public static readonly String DATA_STATES_BBOX = "states-bbox.txt";
 		public static readonly String DATA_COUNTRIES_POLY = "countries-poly.txt";
@@ -39,16 +40,15 @@ namespace Lucene.Net.Contrib.Spatial.Test
 
 		public static readonly String QTEST_States_IsWithin_BBox = "states-IsWithin-BBox.txt";
 		public static readonly String QTEST_States_Intersects_BBox = "states-Intersects-BBox.txt";
-
 		public static readonly String QTEST_Cities_IsWithin_BBox = "cities-IsWithin-BBox.txt";
+		public static readonly String QTEST_Simple_Queries_BBox = "simple-Queries-BBox.txt";
 
 		//private Logger log = Logger.getLogger(getClass().getName());
 
 		protected readonly SpatialArgsParser argsParser = new SpatialArgsParser();
 
-		protected SpatialStrategy<T> strategy;
+		protected SpatialStrategy strategy;
 		protected SpatialContext ctx;
-		protected T fieldInfo;
 		protected bool storeShape = true;
 
 		protected void executeQueries(SpatialMatchConcern concern, params String[] testQueryFile)
@@ -79,13 +79,13 @@ namespace Lucene.Net.Contrib.Spatial.Test
 				document.Add(new Field("id", data.id, Field.Store.YES, Field.Index.ANALYZED));
 				document.Add(new Field("name", data.name, Field.Store.YES, Field.Index.ANALYZED));
 				Shape shape = ctx.ReadShape(data.shape);
-				foreach (var f in strategy.CreateFields(fieldInfo, shape, true, storeShape))
+				foreach (var f in strategy.CreateIndexableFields(shape))
 				{
-					if (f != null)
-					{ // null if incompatibleGeometry && ignore
-						document.Add(f);
-					}
+					document.Add(f);
 				}
+				if (storeShape)
+					document.Add(strategy.CreateStoredField(shape));
+
 				documents.Add(document);
 			}
 			return documents;
@@ -112,15 +112,21 @@ namespace Lucene.Net.Contrib.Spatial.Test
 				SpatialTestQuery q = queries.Current;
 
 				String msg = q.line; //"Query: " + q.args.toString(ctx);
-				SearchResults got = executeQuery(strategy.MakeQuery(q.args, fieldInfo), 100);
+				SearchResults got = executeQuery(strategy.MakeQuery(q.args), 100);
+				if (storeShape && got.numFound > 0)
+				{
+					//check stored value is there & parses
+					Assert.NotNull(ctx.ReadShape(got.results[0].document.Get(strategy.GetFieldName())));
+				}
 				if (concern.orderIsImportant)
 				{
 					var ids = q.ids.GetEnumerator();
 					foreach (var r in got.results)
 					{
 						String id = r.document.Get("id");
-						ids.MoveNext();
-						Assert.AreEqual("out of order: " + msg, ids.Current, id);
+						if (!ids.MoveNext())
+							Assert.Fail(msg + " :: Did not get enough results.  Expected " + q.ids + ", got: " + got.toDebugString());
+						Assert.AreEqual(ids.Current, id, "out of order: " + msg);
 					}
 					if (ids.MoveNext())
 					{

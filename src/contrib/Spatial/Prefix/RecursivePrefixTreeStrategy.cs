@@ -16,49 +16,42 @@
  */
 
 using Lucene.Net.Search;
-using Lucene.Net.Search.Function;
 using Lucene.Net.Spatial.Prefix.Tree;
-using Lucene.Net.Spatial.Util;
-using Spatial4n.Core.Exceptions;
-using Spatial4n.Core.Query;
+using Lucene.Net.Spatial.Queries;
 using Spatial4n.Core.Shapes;
 
 namespace Lucene.Net.Spatial.Prefix
 {
+	/// <summary>
+	/// Based on {@link RecursivePrefixTreeFilter}.
+	/// </summary>
 	public class RecursivePrefixTreeStrategy : PrefixTreeStrategy
 	{
-		private int prefixGridScanLevel;//TODO how is this customized?
+		private int prefixGridScanLevel;
 
-		public RecursivePrefixTreeStrategy(SpatialPrefixTree grid)
-			: base(grid)
+		public RecursivePrefixTreeStrategy(SpatialPrefixTree grid, string fieldName)
+			: base(grid, fieldName)
 		{
 			prefixGridScanLevel = grid.GetMaxLevels() - 4;//TODO this default constant is dependent on the prefix grid size
 		}
 
 		public void SetPrefixGridScanLevel(int prefixGridScanLevel)
 		{
+			//TODO if negative then subtract from maxlevels
 			this.prefixGridScanLevel = prefixGridScanLevel;
 		}
 
-		public override Query MakeQuery(SpatialArgs args, SimpleSpatialFieldInfo fieldInfo)
-		{
-			Filter f = MakeFilter(args, fieldInfo);
-
-			ValueSource vs = MakeValueSource(args, fieldInfo);
-			return new FilteredQuery(new FunctionQuery(vs), f);
-		}
-
-		public override Filter MakeFilter(SpatialArgs args, SimpleSpatialFieldInfo fieldInfo)
+		public override Filter MakeFilter(SpatialArgs args)
 		{
 			var op = args.Operation;
-			if (!SpatialOperation.Is(op, SpatialOperation.IsWithin, SpatialOperation.Intersects, SpatialOperation.BBoxWithin))
+			if (!SpatialOperation.Is(op, SpatialOperation.IsWithin, SpatialOperation.Intersects, SpatialOperation.BBoxWithin, SpatialOperation.BBoxIntersects))
 				throw new UnsupportedSpatialOperation(op);
 
-			Shape qshape = args.GetShape();
+			Shape shape = args.GetShape();
 
-			int detailLevel = grid.GetMaxLevelForPrecision(qshape, args.GetDistPrecision());
+			int detailLevel = grid.GetMaxLevelForPrecision(shape, args.GetDistPrecision());
 
-			return new RecursivePrefixTreeFilter(fieldInfo.GetFieldName(), grid, qshape, prefixGridScanLevel, detailLevel);
+			return new RecursivePrefixTreeFilter(GetFieldName(), grid, shape, prefixGridScanLevel, detailLevel);
 		}
 
 		public override string ToString()

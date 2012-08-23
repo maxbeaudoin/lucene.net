@@ -15,40 +15,13 @@
  * limitations under the License.
  */
 
-using System;
+using Lucene.Net.Search;
+using Spatial4n.Core.Shapes;
 
-namespace Lucene.Net.Spatial.Vector
+namespace Lucene.Net.Spatial.BBox
 {
-	public class TwoDoublesFieldInfo : SpatialFieldInfo
+	public interface BBoxSimilarity
 	{
-		public static String SUFFIX_X = "__x";
-		public static String SUFFIX_Y = "__y";
-
-		private readonly String fieldName;
-		private readonly String fieldNameX;
-		private readonly String fieldNameY;
-
-		public TwoDoublesFieldInfo(String fieldNamePrefix)
-		{
-			fieldName = fieldNamePrefix;
-			fieldNameX = fieldNamePrefix + SUFFIX_X;
-			fieldNameY = fieldNamePrefix + SUFFIX_Y;
-		}
-
-		public String GetFieldName()
-		{
-			return fieldName;
-		}
-
-		public String GetFieldNameX()
-		{
-			return fieldNameX;
-		}
-
-		public String GetFieldNameY()
-		{
-			return fieldNameY;
-		}
-
+		double Score(Rectangle extent, Explanation exp);
 	}
 }
