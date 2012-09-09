@@ -65,9 +65,10 @@ namespace Lucene.Net.Spatial.Util
 					{
 						v = Math.Min(v, enclosingInstance.calculator.Distance(enclosingInstance.from, vals[i]));
 					}
-					return v;
+					// Solr's 'recip' function where v = distance and v > 0.
+					return v > 0 ? 1000 / (1 * v + 1000) : 0;
 				}
-				return Double.NaN; // ?? maybe max?
+				return Double.MaxValue;// use max for the most distance
 			}
 
 			public override string ToString(int doc)
