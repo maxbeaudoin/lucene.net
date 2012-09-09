@@ -156,9 +156,9 @@ namespace Lucene.Net.Contrib.Spatial.Test
 			commit();
 
 			//query closer to #100
-			checkHitsOrdered("Intersects(Circle(3,4 d=1000))", "101", "100");
+			checkHitsOrdered("Intersects(Circle(3,4 d=1000))", "100", "101");
 			//query closer to #101
-			checkHitsOrdered("Intersects(Circle(4,0 d=1000))", "100", "101");
+			checkHitsOrdered("Intersects(Circle(4,0 d=1000))", "101", "100");
 		}
 
 		private void checkHitsOrdered(String spatialQ, params String[] ids)
