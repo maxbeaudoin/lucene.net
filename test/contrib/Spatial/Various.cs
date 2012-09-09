@@ -146,7 +146,7 @@ namespace Lucene.Net.Contrib.Spatial.Test
 			var dq = strategy.MakeQuery(args);
 			Console.WriteLine(dq);
 
-			TopDocs hits = _searcher.Search(dq, null, 1000, new Sort(new SortField("distance", SortField.SCORE, true)));
+			TopDocs hits = _searcher.Search(dq, null, 1000, new Sort(new SortField("distance", SortField.SCORE, false)));
 			var results = hits.TotalHits;
 			Assert.AreEqual(3, results);
 
